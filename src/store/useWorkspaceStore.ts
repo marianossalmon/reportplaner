@@ -19,7 +19,6 @@ interface WorkspaceState {
   setLanguage: (lang: Language) => void;
   setProjectDetails: (details: ProjectDetails) => void;
   setClientLogoUrl: (url: string) => void;
-  // Background actions — operate on the ACTIVE version
   setBackgroundImage: (image: string | null) => void;
   setBackgroundPos: (pos: { x: number; y: number }) => void;
   setBackgroundScale: (scale: { x: number; y: number }) => void;
@@ -56,7 +55,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
         : null,
     })),
 
-  // --- Per-version background ---
   setBackgroundImage: (image) =>
     set((state) => ({
       versions: state.versions.map((v) =>
@@ -165,9 +163,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     set((state) => {
       const chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
       const name = `Alternative ${chars[state.versions.length] ?? state.versions.length + 1}`;
+      
+      // FIX: Generamos el ID UNA SOLA VEZ para que coincida en la tab y en la versión activa
+      const newId = `v${Date.now()}`;
+      
       return {
-        versions: [...state.versions, { id: `v${Date.now()}`, name, elements: [], ...defaultBg() }],
-        activeVersionId: `v${Date.now()}`,
+        versions: [...state.versions, { id: newId, name, elements: [], ...defaultBg() }],
+        activeVersionId: newId,
         viewMode: 'canvas' as const,
         placementMode: null,
       };

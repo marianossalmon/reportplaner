@@ -98,7 +98,6 @@ export function ExportButton() {
   const { versions, language, projectDetails } = useWorkspaceStore();
   const dict = t[language];
 
-  // ← async keyword aquí — éste era el bug
   const buildVersionCanvases = async (): Promise<VersionCanvas[]> => {
     const store = useWorkspaceStore.getState();
 
@@ -108,9 +107,10 @@ export function ExportButton() {
     }
 
     const container = document.getElementById('workspace-canvas');
-    const liveCanvas = container?.getElementsByTagName('canvas')[0];
-    const w = liveCanvas?.width  || 900;
-    const h = liveCanvas?.height || 650;
+    // FIX IMPORTANTE: Usar offsetWidth/Height lógicos. Si usamos canvas.width en pantallas retina el canvas
+    // se dibuja al doble de tamaño pero los elementos a tamaño normal (desalineado).
+    const w = container?.offsetWidth  || 800;
+    const h = container?.offsetHeight || 600;
 
     return Promise.all(
       store.versions.map(async (v) => ({

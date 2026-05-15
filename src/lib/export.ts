@@ -1,7 +1,6 @@
 import jsPDF from 'jspdf';
 import { Metrics, Language, ProjectDetails } from '../types';
 import { t } from './i18n';
-import { GEBESA_LOGO_B64 } from '../assets/gebesa-logo';
 
 export interface VersionCanvas {
   id: string;
@@ -16,24 +15,38 @@ interface LoadedImage {
   h: number;
 }
 
+// FIX IMPORTANTE: Descargar la imagen vía fetch, convertirla a blob y renderizarla a un Canvas 2D
+// Esto limpia cualquier metadato extraño y genera un base64 "image/png" estándar 100% compatible con jsPDF
 async function loadImage(src: string): Promise<LoadedImage | null> {
   if (!src) return null;
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const c = document.createElement('canvas');
-        c.width  = img.naturalWidth  || 1;
-        c.height = img.naturalHeight || 1;
-        const ctx = c.getContext('2d');
-        if (!ctx) { resolve(null); return; }
-        ctx.drawImage(img, 0, 0);
-        resolve({ dataUrl: c.toDataURL('image/png'), w: c.width, h: c.height });
-      } catch { resolve(null); }
-    };
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
+  try {
+    const res = await fetch(src);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = objectUrl;
+    });
+
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth || 1;
+    c.height = img.naturalHeight || 1;
+    const ctx = c.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0);
+
+    const dataUrl = c.toDataURL('image/png');
+    URL.revokeObjectURL(objectUrl);
+
+    return { dataUrl, w: c.width, h: c.height };
+  } catch (e) {
+    console.warn('loadImage error for', src, e);
+    return null;
+  }
 }
 
 function drawLogoContained(
@@ -340,7 +353,7 @@ export const exportToPDF = async (
   const H    = pdf.internal.pageSize.getHeight();
 
   const [gebesaImg, clientImg] = await Promise.all([
-    loadImage(GEBESA_LOGO_B64),
+    loadImage('/LOGO_GEBESA_PNG_SIN_FONDO.png'),
     project.clientLogoUrl ? loadImage(project.clientLogoUrl) : Promise.resolve(null),
   ]);
 
