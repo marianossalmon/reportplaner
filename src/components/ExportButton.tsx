@@ -6,7 +6,6 @@ import { t } from '../lib/i18n';
 import { PreviewModal } from './PreviewModal';
 import { WorkspaceElement } from '../types';
 
-// Simplified element styles for offscreen canvas rendering (mirrors Canvas.tsx colors)
 const EL_STYLES: Record<string, { fill: string; stroke: string; label: string }> = {
   desk_bench:      { fill: 'rgba(92,102,112,0.85)',  stroke: '#3A444C', label: '' },
   desk_individual: { fill: 'rgba(107,142,35,0.85)',  stroke: '#4B621B', label: '' },
@@ -22,10 +21,6 @@ const EL_STYLES: Record<string, { fill: string; stroke: string; label: string }>
   site:            { fill: 'rgba(47,79,79,0.85)',    stroke: '#000',    label: 'SITE' },
 };
 
-/**
- * Renders a version's floor plan to an offscreen HTML canvas (no Konva, no React state).
- * This avoids any crashes from switching active versions.
- */
 async function renderVersionOffscreen(
   elements: WorkspaceElement[],
   backgroundImage: string | null,
@@ -39,24 +34,18 @@ async function renderVersionOffscreen(
   canvas.height = h;
   const ctx = canvas.getContext('2d')!;
 
-  // White fill
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, w, h);
 
-  // Draw background image (floor plan)
   if (backgroundImage) {
     await new Promise<void>((resolve) => {
       const img = new Image();
       img.onload = () => {
         ctx.save();
         ctx.globalAlpha = 0.7;
-        ctx.drawImage(
-          img,
-          backgroundPos.x,
-          backgroundPos.y,
+        ctx.drawImage(img, backgroundPos.x, backgroundPos.y,
           img.naturalWidth * backgroundScale.x,
-          img.naturalHeight * backgroundScale.y
-        );
+          img.naturalHeight * backgroundScale.y);
         ctx.restore();
         resolve();
       };
@@ -65,11 +54,9 @@ async function renderVersionOffscreen(
     });
   }
 
-  // Draw each element as a rounded rect
   for (const el of elements) {
     const s = EL_STYLES[el.type] ?? { fill: 'rgba(200,200,200,0.8)', stroke: '#999', label: '' };
     const rx = 4;
-
     ctx.beginPath();
     ctx.moveTo(el.x + rx, el.y);
     ctx.lineTo(el.x + el.width - rx, el.y);
@@ -81,7 +68,6 @@ async function renderVersionOffscreen(
     ctx.lineTo(el.x, el.y + rx);
     ctx.quadraticCurveTo(el.x, el.y, el.x + rx, el.y);
     ctx.closePath();
-
     ctx.fillStyle = s.fill;
     ctx.fill();
     ctx.strokeStyle = s.stroke;
@@ -106,49 +92,44 @@ async function renderVersionOffscreen(
 }
 
 export function ExportButton() {
-  const [isExporting, setIsExporting]   = useState(false);
+  const [isExporting, setIsExporting]     = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [previewUrl, setPreviewUrl]     = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl]       = useState<string | null>(null);
   const { versions, language, projectDetails } = useWorkspaceStore();
   const dict = t[language];
 
-  /**
-   * Build VersionCanvas for every version by rendering each one to an offscreen canvas.
-   * Zero Zustand mutations, zero React re-renders — no crash.
-   */
+  // ← async keyword aquí — éste era el bug
   const buildVersionCanvases = async (): Promise<VersionCanvas[]> => {
     const store = useWorkspaceStore.getState();
 
-    // Switch to canvas view if needed so Konva is mounted (we need its size)
     if (store.viewMode !== 'canvas') {
       store.setViewMode('canvas');
       await new Promise((r) => setTimeout(r, 450));
     }
 
-    // Grab canvas dimensions from the live Konva stage
     const container = document.getElementById('workspace-canvas');
     const liveCanvas = container?.getElementsByTagName('canvas')[0];
     const w = liveCanvas?.width  || 900;
     const h = liveCanvas?.height || 650;
 
-    // Render every version independently on offscreen canvases (parallel)
-    const vcs = await Promise.all(
+    return Promise.all(
       store.versions.map(async (v) => ({
         id: v.id,
         name: v.name,
         imgData: await renderVersionOffscreen(
           v.elements,
-          store.backgroundImage,
-          store.backgroundPos,
-          store.backgroundScale,
-          w,
-          h
+          v.backgroundImage      ?? null,
+          v.backgroundPos        ?? { x: 0, y: 0 },
+          v.backgroundScale      ?? { x: 1, y: 1 },
+          w, h
         ),
-        metrics: calculateMetrics(v.elements, store.language, store.projectDetails?.totalArea ?? 0),
+        metrics: calculateMetrics(
+          v.elements,
+          store.language,
+          store.projectDetails?.totalArea ?? 0
+        ),
       }))
     );
-
-    return vcs;
   };
 
   const handlePreview = async () => {

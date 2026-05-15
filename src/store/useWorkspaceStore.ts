@@ -1,23 +1,29 @@
 import { create } from 'zustand';
 import { WorkspaceElement, ElementType, WorkspaceVersion, Language, ProjectDetails } from '../types';
 
+const defaultBg = () => ({
+  backgroundImage: null as string | null,
+  backgroundPos: { x: 0, y: 0 },
+  backgroundScale: { x: 1, y: 1 },
+});
+
 interface WorkspaceState {
   language: Language;
   projectDetails: ProjectDetails | null;
-  backgroundImage: string | null;
-  backgroundPos: { x: number; y: number };
-  backgroundScale: { x: number; y: number };
   isEditingBackground: boolean;
   versions: WorkspaceVersion[];
   activeVersionId: string;
   viewMode: 'canvas' | 'summary';
   placementMode: ElementType | null;
+
   setLanguage: (lang: Language) => void;
   setProjectDetails: (details: ProjectDetails) => void;
   setClientLogoUrl: (url: string) => void;
+  // Background actions — operate on the ACTIVE version
   setBackgroundImage: (image: string | null) => void;
   setBackgroundPos: (pos: { x: number; y: number }) => void;
   setBackgroundScale: (scale: { x: number; y: number }) => void;
+  clearVersionBackground: () => void;
   setIsEditingBackground: (isEditing: boolean) => void;
   setPlacementMode: (type: ElementType | null) => void;
   addElement: (type: ElementType, x: number, y: number) => string;
@@ -27,6 +33,7 @@ interface WorkspaceState {
   removeElement: (id: string) => void;
   clearWorkspace: () => void;
   addVersion: () => void;
+  removeVersion: (id: string) => void;
   setActiveVersion: (id: string) => void;
   setViewMode: (mode: 'canvas' | 'summary') => void;
 }
@@ -34,11 +41,8 @@ interface WorkspaceState {
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   language: 'es',
   projectDetails: null,
-  backgroundImage: null,
-  backgroundPos: { x: 0, y: 0 },
-  backgroundScale: { x: 1, y: 1 },
   isEditingBackground: false,
-  versions: [{ id: 'v1', name: 'Alternative A', elements: [] }],
+  versions: [{ id: 'v1', name: 'Alternative A', elements: [], ...defaultBg() }],
   activeVersionId: 'v1',
   viewMode: 'canvas',
   placementMode: null,
@@ -51,18 +55,46 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
         ? { ...state.projectDetails, clientLogoUrl: url || undefined }
         : null,
     })),
+
+  // --- Per-version background ---
   setBackgroundImage: (image) =>
-    set({ backgroundImage: image, backgroundScale: { x: 1, y: 1 }, backgroundPos: { x: 0, y: 0 } }),
-  setBackgroundPos: (pos) => set({ backgroundPos: pos }),
-  setBackgroundScale: (scale) => set({ backgroundScale: scale }),
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId
+          ? { ...v, backgroundImage: image, backgroundPos: { x: 0, y: 0 }, backgroundScale: { x: 1, y: 1 } }
+          : v
+      ),
+    })),
+
+  setBackgroundPos: (pos) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId ? { ...v, backgroundPos: pos } : v
+      ),
+    })),
+
+  setBackgroundScale: (scale) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId ? { ...v, backgroundScale: scale } : v
+      ),
+    })),
+
+  clearVersionBackground: () =>
+    set((state) => ({
+      isEditingBackground: false,
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId ? { ...v, ...defaultBg() } : v
+      ),
+    })),
+
   setIsEditingBackground: (isEditing) => set({ isEditingBackground: isEditing, placementMode: null }),
   setPlacementMode: (type) => set({ placementMode: type, isEditingBackground: false }),
 
   addElement: (type, x, y) => {
     let newId = '';
     set((state) => {
-      let width = 60;
-      let height = 60;
+      let width = 60, height = 60;
       if (type === 'desk_bench')      { width = 120; height = 60; }
       if (type === 'desk_individual') { width = 60;  height = 60; }
       if (type === 'desk_operative')  { width = 80;  height = 60; }
@@ -75,17 +107,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       if (type === 'reception')       { width = 100; height = 100; }
       if (type === 'archive')         { width = 80;  height = 40; }
       if (type === 'site')            { width = 60;  height = 60; }
-
-      const newElement: WorkspaceElement = {
-        id: Math.random().toString(36).substring(2, 9),
-        type, x, y, width, height,
-      };
-      newId = newElement.id;
+      const el: WorkspaceElement = { id: Math.random().toString(36).substring(2, 9), type, x, y, width, height };
+      newId = el.id;
       return {
         versions: state.versions.map((v) =>
-          v.id === state.activeVersionId
-            ? { ...v, elements: [...v.elements, newElement] }
-            : v
+          v.id === state.activeVersionId ? { ...v, elements: [...v.elements, el] } : v
         ),
       };
     });
@@ -135,19 +161,25 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       ),
     })),
 
-addVersion: () =>
-  set((state) => {
-    const chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-    const name = `Alternative ${chars[state.versions.length] ?? state.versions.length + 1}`;
-    const newId = `v${Date.now()}`;
-    return {
-      versions: [...state.versions, { id: newId, name, elements: [] }],
-      activeVersionId: newId,
-      viewMode: 'canvas' as const,
-      placementMode: null,
-      // backgroundImage NO se resetea → el plano base persiste en todas las alternativas
-    };
-  }),
+  addVersion: () =>
+    set((state) => {
+      const chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      const name = `Alternative ${chars[state.versions.length] ?? state.versions.length + 1}`;
+      return {
+        versions: [...state.versions, { id: `v${Date.now()}`, name, elements: [], ...defaultBg() }],
+        activeVersionId: `v${Date.now()}`,
+        viewMode: 'canvas' as const,
+        placementMode: null,
+      };
+    }),
+
+  removeVersion: (id) =>
+    set((state) => {
+      if (state.versions.length <= 1) return state;
+      const next = state.versions.filter((v) => v.id !== id);
+      const newActive = state.activeVersionId === id ? next[0].id : state.activeVersionId;
+      return { versions: next, activeVersionId: newActive, viewMode: 'canvas' as const };
+    }),
 
   setActiveVersion: (id) => set({ activeVersionId: id, viewMode: 'canvas' }),
   setViewMode: (mode) => set({ viewMode: mode }),

@@ -1,33 +1,25 @@
 export type ElementType =
-  | 'desk_bench'
-  | 'desk_individual'
-  | 'desk_operative'
-  | 'desk_executive'
-  | 'meeting_room'
-  | 'huddle_room'
-  | 'private_office'
-  | 'lounge'
-  | 'dining'
-  | 'reception'
-  | 'archive'
-  | 'site';
+  | 'desk_bench' | 'desk_individual' | 'desk_operative' | 'desk_executive'
+  | 'meeting_room' | 'huddle_room' | 'private_office'
+  | 'lounge' | 'dining' | 'reception' | 'archive' | 'site';
 
 export type Language = 'en' | 'es';
 
 export interface WorkspaceElement {
   id: string;
   type: ElementType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: number; y: number; width: number; height: number;
   capacity?: number;
 }
 
+// ← backgroundImage ahora vive AQUÍ, por versión
 export interface WorkspaceVersion {
   id: string;
   name: string;
   elements: WorkspaceElement[];
+  backgroundImage: string | null;
+  backgroundPos: { x: number; y: number };
+  backgroundScale: { x: number; y: number };
 }
 
 export interface ProjectDetails {
@@ -38,19 +30,8 @@ export interface ProjectDetails {
 }
 
 export interface Metrics {
-  area: number;
-  seats: number;
-  openSpace: number;
-  offices: number;
-  confRooms: number;
-  lounge: number;
-  dining: number;
-  reception: number;
-  archive: number;
-  archiveCapacity: number;
-  site: number;
-  density: number;
-  daylight: number;
-  privacy: number;
-  efficiency: number;
+  area: number; seats: number; openSpace: number; offices: number;
+  confRooms: number; lounge: number; dining: number; reception: number;
+  archive: number; archiveCapacity: number; site: number;
+  density: number; daylight: number; privacy: number; efficiency: number;
 }
