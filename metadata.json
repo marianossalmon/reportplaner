@@ -1,0 +1,6 @@
+{
+  "name": "Workspace Planner",
+  "description": "Herramienta visual simple y rápida para planificar layouts de oficinas, calculando métricas de usabilidad en tiempo real y permitiendo exportación de reportes PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

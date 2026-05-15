@@ -1,0 +1,132 @@
+import { Language } from '../types';
+
+export const t = {
+  en: {
+    appTitle: 'Workspace Planner',
+    subtitle: 'HQ Expansion - Floor 4',
+    saveDraft: 'Save Draft',
+    exportReport: 'Export Executive Report',
+    exporting: 'Exporting...',
+    blueprint: 'Blueprint',
+    replaceImage: 'Replace floor plan image',
+    uploadImage: 'Upload Floor Plan',
+    furnitureLibrary: 'Furniture Library',
+    proTip: 'Pro-Tip: Use the canvas tools to plan your space. Metrics update automatically.',
+    clearWorkspace: 'Clear Workspace',
+    clickToPlace: 'Click on canvas to place',
+    cancelPlacement: 'Cancel Placement',
+    setup: {
+      title: 'Welcome to Workspace Planner',
+      setupProject: 'Setup your project',
+      projectName: 'Project Name',
+      advisor: 'Advisor / Designer',
+      area: 'Total Area (sqf)',
+      start: 'Start Planning'
+    },
+    elements: {
+      desk_bench: { title: 'Benching', sub: 'Multiple users', label: '' },
+      desk_individual: { title: 'Individual Desk', sub: 'Single Workstation', label: '' },
+      desk_operative: { title: 'Operative Desk', sub: 'Single Workstation', label: '' },
+      desk_executive: { title: 'Executive Desk', sub: 'Single Workstation', label: '' },
+      meeting_room: { title: 'Meeting Room', sub: 'Enclosed space', label: 'MEETING' },
+      private_office: { title: 'Private Office', sub: 'Executive Suite', label: 'OFFICE' },
+      lounge: { title: 'Lounge Area', sub: 'Casual Seating', label: 'LOUNGE' },
+      dining: { title: 'Dining Area', sub: 'Cafeteria / Pantry', label: 'DINING' },
+      reception: { title: 'Reception', sub: 'Waiting & Welcome', label: 'RECEPTION' },
+      archive: { title: 'Archive', sub: 'Filing & Storage', label: 'ARCHIVE' },
+      site: { title: 'IT Site', sub: 'Server Room', label: 'SITE' },
+    },
+    canvas: {
+      holdShift: 'CLICK ELEMENT TO DELETE',
+    },
+    metrics: {
+      areaLabel: 'RSF',
+      seats: 'Seats',
+      archiveCapacity: 'Archive Capacity',
+      openSpace: 'Open Space',
+      offices: 'Offices',
+      confRooms: 'Conf Room',
+      density: 'Density',
+      densitySub: 'sqf/person',
+      daylight: 'Daylight',
+      privacy: 'Privacy',
+      efficiency: 'Efficiency',
+      average: 'Average'
+    },
+    summary: {
+      tabStr: 'Summary',
+      analysis: 'Summary Analysis',
+      metric: 'Metric',
+      compare: 'Compare',
+      spaceDist: 'Space Distribution',
+      work: 'Work',
+      shared: 'Shared',
+      amenities: 'Amenities',
+      structure: 'Structure'
+    }
+  },
+  es: {
+    appTitle: 'Planificador de Espacios',
+    subtitle: 'Expansión HQ - Piso 4',
+    saveDraft: 'Guardar Borrador',
+    exportReport: 'Exportar Reporte Ejecutivo',
+    exporting: 'Exportando...',
+    blueprint: 'Plano base',
+    replaceImage: 'Reemplazar imagen del plano',
+    uploadImage: 'Subir Plano',
+    furnitureLibrary: 'Mobiliario',
+    proTip: 'Tip: Usa las herramientas del canvas para planificar tu espacio. Las métricas se actualizan.',
+    clearWorkspace: 'Limpiar Espacio',
+    clickToPlace: 'Haz clic en el lienzo para colocar',
+    cancelPlacement: 'Cancelar Ubicación',
+    setup: {
+      title: 'Bienvenido al Planificador',
+      setupProject: 'Configura tu proyecto',
+      projectName: 'Nombre del Proyecto',
+      advisor: 'Asesor / Proyectista',
+      area: 'Área Total (m²)',
+      start: 'Comenzar Diseño'
+    },
+    elements: {
+      desk_bench: { title: 'Estación Bench', sub: 'Múltiples usuarios', label: '' },
+      desk_individual: { title: 'Escritorio Individual', sub: 'Estación individual', label: '' },
+      desk_operative: { title: 'Escritorio Operativo', sub: 'Estación individual', label: '' },
+      desk_executive: { title: 'Escritorio Ejecutivo', sub: 'Estación individual', label: '' },
+      meeting_room: { title: 'Sala de Juntas', sub: 'Espacio cerrado', label: 'SALA' },
+      private_office: { title: 'Oficina Privada', sub: 'Suite Ejecutiva', label: 'OFICINA' },
+      lounge: { title: 'Lounge', sub: 'Área de descanso', label: 'LOUNGE' },
+      dining: { title: 'Comedor', sub: 'Cafetería / Pantry', label: 'COMEDOR' },
+      reception: { title: 'Recepción', sub: 'Espera y Bienvenida', label: 'RECEPCIÓN' },
+      archive: { title: 'Archivo', sub: 'Almacenamiento', label: 'ARCHIVO' },
+      site: { title: 'Site', sub: 'Cuarto de servidores', label: 'SITE' },
+    },
+    canvas: {
+      holdShift: 'HAZ CLIC EN UN ELEMENTO PARA BORRARLO',
+    },
+    metrics: {
+      areaLabel: 'M2',
+      seats: 'Asientos',
+      archiveCapacity: 'Capacidad de Archivo',
+      openSpace: 'Espacio Abierto',
+      offices: 'Oficinas',
+      confRooms: 'Salas',
+      density: 'Densidad',
+      densitySub: 'm²/persona',
+      daylight: 'Luz Natural',
+      privacy: 'Privacidad',
+      efficiency: 'Eficiencia',
+      average: 'Promedio'
+    },
+    summary: {
+      tabStr: 'Resumen',
+      analysis: 'Análisis Resumido',
+      metric: 'Métrica',
+      compare: 'Comparar',
+      spaceDist: 'Distribución de Espacio',
+      work: 'Trabajo',
+      shared: 'Compartido',
+      amenities: 'Amenidades',
+      structure: 'Estructura'
+    }
+  }
+};
