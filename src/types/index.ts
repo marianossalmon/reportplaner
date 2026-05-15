@@ -1,4 +1,17 @@
-export type ElementType = 'desk_bench' | 'desk_individual' | 'desk_operative' | 'desk_executive' | 'meeting_room' | 'private_office' | 'lounge' | 'dining' | 'reception' | 'archive' | 'site';
+export type ElementType =
+  | 'desk_bench'
+  | 'desk_individual'
+  | 'desk_operative'
+  | 'desk_executive'
+  | 'meeting_room'
+  | 'huddle_room'
+  | 'private_office'
+  | 'lounge'
+  | 'dining'
+  | 'reception'
+  | 'archive'
+  | 'site';
+
 export type Language = 'en' | 'es';
 
 export interface WorkspaceElement {
@@ -21,6 +34,7 @@ export interface ProjectDetails {
   projectName: string;
   advisorName: string;
   totalArea: number;
+  clientLogoUrl?: string;
 }
 
 export interface Metrics {

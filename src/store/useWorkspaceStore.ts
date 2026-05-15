@@ -14,6 +14,7 @@ interface WorkspaceState {
   placementMode: ElementType | null;
   setLanguage: (lang: Language) => void;
   setProjectDetails: (details: ProjectDetails) => void;
+  setClientLogoUrl: (url: string) => void;
   setBackgroundImage: (image: string | null) => void;
   setBackgroundPos: (pos: { x: number; y: number }) => void;
   setBackgroundScale: (scale: { x: number; y: number }) => void;
@@ -41,101 +42,113 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   activeVersionId: 'v1',
   viewMode: 'canvas',
   placementMode: null,
+
   setLanguage: (lang) => set({ language: lang }),
   setProjectDetails: (details) => set({ projectDetails: details }),
-  setBackgroundImage: (image) => set({ backgroundImage: image, backgroundScale: { x: 1, y: 1 }, backgroundPos: { x: 0, y: 0 } }),
+  setClientLogoUrl: (url) =>
+    set((state) => ({
+      projectDetails: state.projectDetails
+        ? { ...state.projectDetails, clientLogoUrl: url || undefined }
+        : null,
+    })),
+  setBackgroundImage: (image) =>
+    set({ backgroundImage: image, backgroundScale: { x: 1, y: 1 }, backgroundPos: { x: 0, y: 0 } }),
   setBackgroundPos: (pos) => set({ backgroundPos: pos }),
   setBackgroundScale: (scale) => set({ backgroundScale: scale }),
   setIsEditingBackground: (isEditing) => set({ isEditingBackground: isEditing, placementMode: null }),
   setPlacementMode: (type) => set({ placementMode: type, isEditingBackground: false }),
+
   addElement: (type, x, y) => {
     let newId = '';
     set((state) => {
       let width = 60;
       let height = 60;
-      
-      if (type === 'desk_bench') { width = 120; height = 60; }
-      if (type === 'desk_individual') { width = 60; height = 60; }
-      if (type === 'desk_operative') { width = 80; height = 60; }
-      if (type === 'desk_executive') { width = 100; height = 80; }
-      if (type === 'meeting_room') { width = 150; height = 120; }
-      if (type === 'private_office') { width = 120; height = 120; }
-      if (type === 'lounge') { width = 100; height = 80; }
-      if (type === 'dining') { width = 180; height = 100; }
-      if (type === 'reception') { width = 100; height = 100; }
-      if (type === 'archive') { width = 80; height = 40; }
-      if (type === 'site') { width = 60; height = 60; }
+      if (type === 'desk_bench')      { width = 120; height = 60; }
+      if (type === 'desk_individual') { width = 60;  height = 60; }
+      if (type === 'desk_operative')  { width = 80;  height = 60; }
+      if (type === 'desk_executive')  { width = 100; height = 80; }
+      if (type === 'meeting_room')    { width = 150; height = 120; }
+      if (type === 'huddle_room')     { width = 100; height = 80; }
+      if (type === 'private_office')  { width = 120; height = 120; }
+      if (type === 'lounge')          { width = 100; height = 80; }
+      if (type === 'dining')          { width = 180; height = 100; }
+      if (type === 'reception')       { width = 100; height = 100; }
+      if (type === 'archive')         { width = 80;  height = 40; }
+      if (type === 'site')            { width = 60;  height = 60; }
 
       const newElement: WorkspaceElement = {
         id: Math.random().toString(36).substring(2, 9),
-        type,
-        x,
-        y,
-        width,
-        height,
+        type, x, y, width, height,
       };
-      
       newId = newElement.id;
-      
       return {
-        versions: state.versions.map(v => 
-          v.id === state.activeVersionId 
+        versions: state.versions.map((v) =>
+          v.id === state.activeVersionId
             ? { ...v, elements: [...v.elements, newElement] }
             : v
         ),
-        // we do not unset placement mode so they can place multiple
       };
     });
     return newId;
   },
-  updateElementPosition: (id, x, y) => set((state) => ({
-    versions: state.versions.map(v => 
-      v.id === state.activeVersionId 
-        ? { ...v, elements: v.elements.map(el => el.id === id ? { ...el, x, y } : el) }
-        : v
-    )
-  })),
-  updateElementSize: (id, width, height) => set((state) => ({
-    versions: state.versions.map(v => 
-      v.id === state.activeVersionId 
-        ? { ...v, elements: v.elements.map(el => el.id === id ? { ...el, width, height } : el) }
-        : v
-    )
-  })),
-  updateElementCapacity: (id, capacity) => set((state) => ({
-    versions: state.versions.map(v => 
-      v.id === state.activeVersionId 
-        ? { ...v, elements: v.elements.map(el => el.id === id ? { ...el, capacity } : el) }
-        : v
-    )
-  })),
-  removeElement: (id) => set((state) => ({
-    versions: state.versions.map(v => 
-      v.id === state.activeVersionId 
-        ? { ...v, elements: v.elements.filter(el => el.id !== id) }
-        : v
-    )
-  })),
-  clearWorkspace: () => set((state) => ({
-    versions: state.versions.map(v => 
-      v.id === state.activeVersionId 
-        ? { ...v, elements: [] }
-        : v
-    )
-  })),
-  addVersion: () => set((state) => {
+
+  updateElementPosition: (id, x, y) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId
+          ? { ...v, elements: v.elements.map((el) => (el.id === id ? { ...el, x, y } : el)) }
+          : v
+      ),
+    })),
+
+  updateElementSize: (id, width, height) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId
+          ? { ...v, elements: v.elements.map((el) => (el.id === id ? { ...el, width, height } : el)) }
+          : v
+      ),
+    })),
+
+  updateElementCapacity: (id, capacity) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId
+          ? { ...v, elements: v.elements.map((el) => (el.id === id ? { ...el, capacity } : el)) }
+          : v
+      ),
+    })),
+
+  removeElement: (id) =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId
+          ? { ...v, elements: v.elements.filter((el) => el.id !== id) }
+          : v
+      ),
+    })),
+
+  clearWorkspace: () =>
+    set((state) => ({
+      versions: state.versions.map((v) =>
+        v.id === state.activeVersionId ? { ...v, elements: [] } : v
+      ),
+    })),
+
+addVersion: () =>
+  set((state) => {
+    const chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const name = `Alternative ${chars[state.versions.length] ?? state.versions.length + 1}`;
     const newId = `v${Date.now()}`;
-    const prevVersionChars = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-    const name = `Alternative ${prevVersionChars[state.versions.length] || state.versions.length + 1}`;
-    
-    const currentElements = state.versions.find(v => v.id === state.activeVersionId)?.elements || [];
-    
     return {
-      versions: [...state.versions, { id: newId, name, elements: [...currentElements] }],
+      versions: [...state.versions, { id: newId, name, elements: [] }],
       activeVersionId: newId,
-      viewMode: 'canvas'
+      viewMode: 'canvas' as const,
+      placementMode: null,
+      // backgroundImage NO se resetea → el plano base persiste en todas las alternativas
     };
   }),
+
   setActiveVersion: (id) => set({ activeVersionId: id, viewMode: 'canvas' }),
-  setViewMode: (mode) => set({ viewMode: mode })
+  setViewMode: (mode) => set({ viewMode: mode }),
 }));
