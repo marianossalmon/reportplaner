@@ -26,47 +26,69 @@ async function renderVersionOffscreen(
   backgroundImage: string | null,
   backgroundPos: { x: number; y: number },
   backgroundScale: { x: number; y: number },
-  w: number,
-  h: number
+  screenW: number,
+  screenH: number
 ): Promise<string> {
+  let cropX = 0;
+  let cropY = 0;
+  let cropW = screenW;
+  let cropH = screenH;
+
+  let imgObj: HTMLImageElement | null = null;
+
+  // FIX: En lugar de capturar la pantalla entera, calculamos exactamente la caja del plano
+  if (backgroundImage) {
+    imgObj = await new Promise<HTMLImageElement | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = backgroundImage;
+    });
+
+    if (imgObj) {
+      cropX = backgroundPos.x;
+      cropY = backgroundPos.y;
+      cropW = imgObj.naturalWidth * backgroundScale.x;
+      cropH = imgObj.naturalHeight * backgroundScale.y;
+    }
+  }
+
+  if (cropW < 50 || cropH < 50) {
+    cropX = 0; cropY = 0; cropW = screenW; cropH = screenH;
+  }
+
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = cropW;
+  canvas.height = cropH;
   const ctx = canvas.getContext('2d')!;
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, cropW, cropH);
 
-  if (backgroundImage) {
-    await new Promise<void>((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        ctx.save();
-        ctx.globalAlpha = 0.7;
-        ctx.drawImage(img, backgroundPos.x, backgroundPos.y,
-          img.naturalWidth * backgroundScale.x,
-          img.naturalHeight * backgroundScale.y);
-        ctx.restore();
-        resolve();
-      };
-      img.onerror = () => resolve();
-      img.src = backgroundImage;
-    });
+  if (imgObj) {
+    ctx.save();
+    ctx.globalAlpha = 0.85; // Más nítido y claro para el PDF
+    ctx.drawImage(imgObj, 0, 0, cropW, cropH); // Dibuja ajustado exactamente al borde
+    ctx.restore();
   }
 
+  // Dibujamos los elementos restándoles el cropX y cropY para que coincidan con la nueva imagen recortada
   for (const el of elements) {
     const s = EL_STYLES[el.type] ?? { fill: 'rgba(200,200,200,0.8)', stroke: '#999', label: '' };
     const rx = 4;
+    const ex = el.x - cropX;
+    const ey = el.y - cropY;
+
     ctx.beginPath();
-    ctx.moveTo(el.x + rx, el.y);
-    ctx.lineTo(el.x + el.width - rx, el.y);
-    ctx.quadraticCurveTo(el.x + el.width, el.y, el.x + el.width, el.y + rx);
-    ctx.lineTo(el.x + el.width, el.y + el.height - rx);
-    ctx.quadraticCurveTo(el.x + el.width, el.y + el.height, el.x + el.width - rx, el.y + el.height);
-    ctx.lineTo(el.x + rx, el.y + el.height);
-    ctx.quadraticCurveTo(el.x, el.y + el.height, el.x, el.y + el.height - rx);
-    ctx.lineTo(el.x, el.y + rx);
-    ctx.quadraticCurveTo(el.x, el.y, el.x + rx, el.y);
+    ctx.moveTo(ex + rx, ey);
+    ctx.lineTo(ex + el.width - rx, ey);
+    ctx.quadraticCurveTo(ex + el.width, ey, ex + el.width, ey + rx);
+    ctx.lineTo(ex + el.width, ey + el.height - rx);
+    ctx.quadraticCurveTo(ex + el.width, ey + el.height, ex + el.width - rx, ey + el.height);
+    ctx.lineTo(ex + rx, ey + el.height);
+    ctx.quadraticCurveTo(ex, ey + el.height, ex, ey + el.height - rx);
+    ctx.lineTo(ex, ey + rx);
+    ctx.quadraticCurveTo(ex, ey, ex + rx, ey);
     ctx.closePath();
     ctx.fillStyle = s.fill;
     ctx.fill();
@@ -80,10 +102,10 @@ async function renderVersionOffscreen(
       ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(s.label, el.x + el.width / 2, el.y + el.height / 2);
+      ctx.fillText(s.label, ex + el.width / 2, ey + el.height / 2);
       if (el.capacity) {
         ctx.font = `${Math.max(6, fontSize - 2)}px sans-serif`;
-        ctx.fillText(`(${el.capacity})`, el.x + el.width / 2, el.y + el.height / 2 + fontSize);
+        ctx.fillText(`(${el.capacity})`, ex + el.width / 2, ey + el.height / 2 + fontSize);
       }
     }
   }
@@ -107,8 +129,6 @@ export function ExportButton() {
     }
 
     const container = document.getElementById('workspace-canvas');
-    // FIX IMPORTANTE: Usar offsetWidth/Height lógicos. Si usamos canvas.width en pantallas retina el canvas
-    // se dibuja al doble de tamaño pero los elementos a tamaño normal (desalineado).
     const w = container?.offsetWidth  || 800;
     const h = container?.offsetHeight || 600;
 

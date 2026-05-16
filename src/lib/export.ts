@@ -353,7 +353,7 @@ export const exportToPDF = async (
   const H    = pdf.internal.pageSize.getHeight();
 
   const [gebesaImg, clientImg] = await Promise.all([
-    loadImage('/LOGO_GEBESA_PNG_SIN_FONDO.png'),
+    loadImage('/logo-gebesa.png'), // AQUI ES EL UNICO CAMBIO DE NOMBRE
     project.clientLogoUrl ? loadImage(project.clientLogoUrl) : Promise.resolve(null),
   ]);
 
