@@ -38,7 +38,7 @@ export const t = {
       lounge:          { title: 'Lounge Area',       sub: 'Casual Seating',      label: 'LOUNGE' },
       dining:          { title: 'Dining Area',       sub: 'Cafeteria / Pantry',  label: 'DINING' },
       reception:       { title: 'Reception',         sub: 'Waiting & Welcome',   label: 'RECEPTION' },
-      archive:         { title: 'Archive',           sub: 'Filing & Storage',    label: 'ARCHIVE' },
+      archive:         { title: 'Archive / Storage', sub: 'Filing & Storage',    label: 'ARCHIVE' },
       site:            { title: 'IT Site',           sub: 'Server Room',         label: 'SITE' },
     },
     canvas: {
@@ -109,7 +109,7 @@ export const t = {
       lounge:          { title: 'Lounge',                sub: 'Área de descanso',      label: 'LOUNGE' },
       dining:          { title: 'Comedor',               sub: 'Cafetería / Pantry',    label: 'COMEDOR' },
       reception:       { title: 'Recepción',             sub: 'Espera y Bienvenida',   label: 'RECEPCIÓN' },
-      archive:         { title: 'Archivo',               sub: 'Almacenamiento',        label: 'ARCHIVO' },
+      archive:         { title: 'Archivo / Almacenaje',  sub: 'Almacenamiento',        label: 'ARCHIVO' },
       site:            { title: 'Site',                  sub: 'Cuarto de servidores',  label: 'SITE' },
     },
     canvas: {

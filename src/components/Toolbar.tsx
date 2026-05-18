@@ -27,13 +27,10 @@ export function Toolbar() {
   const collabButtons = [
     { type: 'meeting_room' as ElementType, icon: Users },
     { type: 'huddle_room' as ElementType,  icon: LayoutGrid },
+    { type: 'private_office' as ElementType, icon: Briefcase },
     { type: 'lounge' as ElementType,       icon: Armchair },
     { type: 'dining' as ElementType,       icon: Coffee },
     { type: 'reception' as ElementType,    icon: Bell },
-  ];
-
-  const supportButtons = [
-    { type: 'private_office' as ElementType, icon: Briefcase },
     { type: 'archive' as ElementType,        icon: Archive },
     { type: 'site' as ElementType,           icon: Server },
   ];
@@ -89,7 +86,7 @@ export function Toolbar() {
                   {language === 'en' ? 'Desks & Workstations' : 'Escritorios'}
                 </div>
                 <div className="text-[10px] text-[#A89F91]">
-                  4 {language === 'en' ? 'options' : 'opciones'}
+                  {deskButtons.length} {language === 'en' ? 'options' : 'opciones'}
                 </div>
               </div>
             </div>
@@ -117,7 +114,7 @@ export function Toolbar() {
                   {language === 'en' ? 'Spaces' : 'Espacios'}
                 </div>
                 <div className="text-[10px] text-[#A89F91]">
-                  5 {language === 'en' ? 'options' : 'opciones'}
+                  {collabButtons.length} {language === 'en' ? 'options' : 'opciones'}
                 </div>
               </div>
             </div>
@@ -130,13 +127,6 @@ export function Toolbar() {
           )}
         </div>
 
-        {/* Support */}
-        <div className="pt-2 space-y-3">
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A89F91] pl-1">
-            {language === 'en' ? 'Support & Enclosed' : 'Soporte y Privados'}
-          </h4>
-          {supportButtons.map(renderButton)}
-        </div>
       </div>
     </>
   );

@@ -15,8 +15,6 @@ interface LoadedImage {
   h: number;
 }
 
-// FIX IMPORTANTE: Descargar la imagen vía fetch, convertirla a blob y renderizarla a un Canvas 2D
-// Esto limpia cualquier metadato extraño y genera un base64 "image/png" estándar 100% compatible con jsPDF
 async function loadImage(src: string): Promise<LoadedImage | null> {
   if (!src) return null;
   try {
@@ -129,13 +127,13 @@ function drawVersionPage(
       pdf.text(label, 7, sy); pdf.text(value, SIDE_W - 2, sy, { align: 'right' });
     } else {
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.2); pdf.setTextColor(90, 90, 64);
-      pdf.text(label, 7, sy);
+      pdf.text(label.substring(0, 25), 7, sy);
       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.2); pdf.setTextColor(42, 42, 30);
       pdf.text(value, SIDE_W - 2, sy, { align: 'right' });
       pdf.setDrawColor(229, 226, 221); pdf.setLineWidth(0.15);
       pdf.line(4, sy + 2, SIDE_W - 2, sy + 2);
     }
-    sy += 7;
+    sy += 6; 
   };
 
   const mBar = (label: string, pct: number) => {
@@ -147,15 +145,26 @@ function drawVersionPage(
     pdf.setFillColor(229, 226, 221); pdf.rect(7, sy, SIDE_W - 10, 2, 'F');
     const c = pct >= 70 ? [107, 142, 35] : pct >= 40 ? [255, 165, 0] : [220, 80, 60];
     pdf.setFillColor(c[0], c[1], c[2]); pdf.rect(7, sy, (SIDE_W - 10) * pct / 100, 2, 'F');
-    sy += 7;
+    sy += 6;
   };
 
+  // ─── RENDERING DINÁMICO ───
   mRow(dict.metrics.areaLabel, `${m.area} m²`, true);
   mRow(dict.metrics.seats,     String(m.seats));
   mRow(dict.metrics.openSpace, String(m.openSpace));
-  mRow(dict.metrics.offices,   String(m.offices));
-  mRow(dict.metrics.confRooms, String(m.confRooms));
-  mRow(dict.metrics.density,   m.density > 0 ? `${m.density}` : '—');
+  
+  // Solo se muestran si > 0
+  if (m.offices > 0) mRow(dict.metrics.offices, String(m.offices));
+  if (m.confRooms > 0) mRow(dict.metrics.confRooms, String(m.confRooms));
+  if (m.lounge > 0) mRow(dict.elements.lounge.title, String(m.lounge));
+  if (m.dining > 0) mRow(dict.elements.dining.title, String(m.dining));
+  if (m.reception > 0) mRow(dict.elements.reception.title, String(m.reception));
+  if (m.archive > 0) mRow(dict.elements.archive.title, String(m.archive));
+  if (m.archiveCapacity > 0) mRow(dict.metrics.archiveCapacity, String(m.archiveCapacity));
+  if (m.site > 0) mRow(dict.elements.site.title, String(m.site));
+
+  sy += 2;
+  mRow(dict.metrics.density,   m.density > 0 ? `${m.density}` : '—', true);
   sy += 2;
   mBar(dict.metrics.daylight,   m.daylight);
   mBar(dict.metrics.privacy,    m.privacy);
@@ -199,33 +208,47 @@ function drawComparisonPage(
   pdf.text(dict.summary.metric, 9 + colW * 0.05, TOP + 4.5);
   vcs.forEach((vc, i) => pdf.text(vc.name, 8 + colW * (i + 1.5), TOP + 4.5, { align: 'center' }));
 
-  const rows = [
-    { label: dict.metrics.seats,                key: 'seats' },
-    { label: dict.metrics.openSpace,            key: 'openSpace' },
-    { label: dict.metrics.offices,              key: 'offices' },
-    { label: dict.metrics.confRooms,            key: 'confRooms' },
-    { label: dict.metrics.density,              key: 'density' },
-    { label: `${dict.metrics.daylight} %`,      key: 'daylight' },
-    { label: `${dict.metrics.privacy} %`,       key: 'privacy' },
-    { label: `${dict.metrics.efficiency} %`,    key: 'efficiency' },
+  // ─── TABLA DINÁMICA ───
+  // Filtramos las filas: Se muestran siempre las esenciales, pero las áreas de soporte 
+  // solo se muestran si en ALGUNA de las versiones existe ese elemento (> 0).
+  const allRows = [
+    { label: dict.metrics.seats,                key: 'seats',           always: true },
+    { label: dict.metrics.openSpace,            key: 'openSpace',       always: true },
+    { label: dict.metrics.offices,              key: 'offices',         always: false },
+    { label: dict.metrics.confRooms,            key: 'confRooms',       always: false },
+    { label: dict.elements.lounge.title,        key: 'lounge',          always: false },
+    { label: dict.elements.dining.title,        key: 'dining',          always: false },
+    { label: dict.elements.reception.title,     key: 'reception',       always: false },
+    { label: dict.elements.archive.title,       key: 'archive',         always: false },
+    { label: dict.metrics.archiveCapacity,      key: 'archiveCapacity', always: false },
+    { label: dict.elements.site.title,          key: 'site',            always: false },
+    { label: dict.metrics.density,              key: 'density',         always: true },
+    { label: `${dict.metrics.daylight} %`,      key: 'daylight',        always: true },
+    { label: `${dict.metrics.privacy} %`,       key: 'privacy',         always: true },
+    { label: `${dict.metrics.efficiency} %`,    key: 'efficiency',      always: true },
   ];
 
+  const rows = allRows.filter(r => r.always || vcs.some(vc => (vc.metrics as any)[r.key] > 0));
+
+  const ROW_H = 5.5; 
+
   rows.forEach((row, ri) => {
-    const ry = TOP + 7 + ri * 7;
-    if (ri % 2 === 1) { pdf.setFillColor(248, 247, 244); pdf.rect(8, ry, W - 16, 7, 'F'); }
-    pdf.setDrawColor(229, 226, 221); pdf.setLineWidth(0.1); pdf.line(8, ry + 7, W - 8, ry + 7);
+    const ry = TOP + 7 + ri * ROW_H;
+    if (ri % 2 === 1) { pdf.setFillColor(248, 247, 244); pdf.rect(8, ry, W - 16, ROW_H, 'F'); }
+    pdf.setDrawColor(229, 226, 221); pdf.setLineWidth(0.1); pdf.line(8, ry + ROW_H, W - 8, ry + ROW_H);
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(6.5); pdf.setTextColor(90, 90, 64);
-    pdf.text(row.label, 9 + colW * 0.05, ry + 4.5);
+    pdf.text(row.label, 9 + colW * 0.05, ry + 3.8);
     vcs.forEach((vc, vi) => {
       pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(42, 42, 30);
-      pdf.text(String((vc.metrics as any)[row.key] ?? '—'), 8 + colW * (vi + 1.5), ry + 4.5, { align: 'center' });
+      pdf.text(String((vc.metrics as any)[row.key] ?? '0'), 8 + colW * (vi + 1.5), ry + 3.8, { align: 'center' });
     });
   });
 
-  const afterTable = TOP + 7 + rows.length * 7 + 10;
+  // Los gráficos bajan o suben dinámicamente dependiendo de cuántas filas existan
+  const afterTable = TOP + 7 + rows.length * ROW_H + 6;
 
   // Radar
-  const cx = W * 0.27, cy = afterTable + 36, R = 28;
+  const cx = W * 0.27, cy = afterTable + 34, R = 26;
   const axes = [
     { label: dict.metrics.density,    key: 'density',    max: 30,  invert: true },
     { label: dict.metrics.daylight,   key: 'daylight',   max: 100, invert: false },
@@ -292,7 +315,7 @@ function drawComparisonPage(
   // Bar chart
   const bx = W * 0.57;
   let by = afterTable + 8;
-  const BAR_H = 10, BAR_G = 4, LBL_W = 18, AVAIL = W - bx - LBL_W - 12;
+  const BAR_H = 8, BAR_G = 3.5, LBL_W = 18, AVAIL = W - bx - LBL_W - 12;
 
   pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.5); pdf.setTextColor(42, 42, 30);
   pdf.text(dict.summary.spaceDist, bx, by);
@@ -352,8 +375,11 @@ export const exportToPDF = async (
   const W    = pdf.internal.pageSize.getWidth();
   const H    = pdf.internal.pageSize.getHeight();
 
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+  const gebesaLogoPath = `${baseUrl}/logo-gebesa.png`;
+
   const [gebesaImg, clientImg] = await Promise.all([
-    loadImage('/logo-gebesa.png'), // AQUI ES EL UNICO CAMBIO DE NOMBRE
+    loadImage(gebesaLogoPath),
     project.clientLogoUrl ? loadImage(project.clientLogoUrl) : Promise.resolve(null),
   ]);
 

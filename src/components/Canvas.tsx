@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Group, Transformer } from 'react-konva';
 import useImage from 'use-image';
+import { Maximize } from 'lucide-react';
 import { useWorkspaceStore } from '../store/useWorkspaceStore';
 import { t } from '../lib/i18n';
 
@@ -117,6 +118,32 @@ export function Canvas() {
     return () => window.removeEventListener('resize', updateSize);
   }, [backgroundImage, activeVersionId]);
 
+  const centerBackgroundImage = () => {
+    if (!backgroundImage) return;
+    const img = new window.Image();
+    img.src = backgroundImage;
+    img.onload = () => {
+      const stageW = size.width;
+      const stageH = size.height;
+      const imgW = img.naturalWidth || 800;
+      const imgH = img.naturalHeight || 600;
+
+      const padding = 40;
+      const availableW = stageW - padding * 2;
+      const availableH = stageH - padding * 2;
+
+      const scale = Math.min(Math.min(availableW / imgW, availableH / imgH), 1);
+      const newW = imgW * scale;
+      const newH = imgH * scale;
+
+      const x = (stageW - newW) / 2;
+      const y = (stageH - newH) / 2;
+
+      setBackgroundScale({ x: scale, y: scale });
+      setBackgroundPos({ x, y });
+    };
+  };
+
   const handleStageClick = (e: any) => {
     if (placementMode) {
       const pos = e.target.getStage().getPointerPosition();
@@ -149,6 +176,25 @@ export function Canvas() {
           onClick={() => setPlacementMode(null)}>
           <span className="text-xs font-semibold">{dict.clickToPlace}</span>
           <span className="text-[10px] opacity-75 uppercase tracking-widest border-l border-white/20 pl-3">{dict.cancelPlacement}</span>
+        </div>
+      )}
+
+      {isEditingBackground && (
+        <div className="absolute top-6 right-6 z-20 pointer-events-auto flex items-center gap-3 shadow-xl rounded-lg bg-white p-1 border border-[#E5E2DD]">
+          <button
+            onClick={centerBackgroundImage}
+            className="flex items-center gap-2 px-4 py-2 hover:bg-[#F1EFEC] text-[#5A5A40] rounded-md transition-colors text-xs font-semibold"
+            title={language === 'es' ? 'Centrar imagen automáticamente' : 'Center image automatically'}
+          >
+            <Maximize size={15} />
+            {language === 'es' ? 'Centrar' : 'Center'}
+          </button>
+          <button
+            onClick={() => setIsEditingBackground(false)}
+            className="bg-[#5A5A40] hover:bg-[#43432e] text-white px-4 py-2 rounded-md transition-colors text-xs font-semibold"
+          >
+            {language === 'es' ? 'Terminar' : 'Done'}
+          </button>
         </div>
       )}
 
